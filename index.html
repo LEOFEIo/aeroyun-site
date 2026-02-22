@@ -7,25 +7,85 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap" rel="stylesheet">
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #050505; color: #fff; }
-        .bg { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1e3a8a 0%, #050505 100%); z-index: -1; animation: breath 8s infinite alternate ease-in-out; }
-        @keyframes breath { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0.9; transform: scale(1.05); } }
-        .content { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; px: 20px; }
-        .tag { padding: 4px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; font-size: 12px; letter-spacing: 2px; color: #60a5fa; margin-bottom: 24px; }
-        h1 { font-size: clamp(3rem, 10vw, 5rem); font-weight: 700; letter-spacing: -3px; margin: 0; background: linear-gradient(to bottom, #fff 30%, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* 粒子容器 */
+        #particles-js {
+            position: absolute; width: 100%; height: 100%;
+            background-color: #050505;
+            background-image: radial-gradient(circle at 50% 50%, #112244 0%, #050505 100%);
+            z-index: 0;
+        }
+
+        .content { 
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; height: 100%; text-align: center; 
+            pointer-events: none; /* 让鼠标穿透文字去操作粒子 */
+        }
+
+        .tag { 
+            padding: 4px 12px; background: rgba(96, 165, 250, 0.1); 
+            border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 50px; 
+            font-size: 12px; letter-spacing: 2px; color: #60a5fa; margin-bottom: 24px; 
+        }
+
+        h1 { 
+            font-size: clamp(3rem, 10vw, 5rem); font-weight: 700; letter-spacing: -3px; margin: 0; 
+            background: linear-gradient(to bottom, #fff 30%, #60a5fa); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+        }
+
         p { font-size: 1.1rem; color: #888; max-width: 500px; line-height: 1.6; margin: 20px 0 40px; }
-        .btn { padding: 12px 40px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: #fff; text-decoration: none; font-weight: 400; transition: 0.4s; backdrop-filter: blur(10px); }
-        .btn:hover { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 30px rgba(255,255,255,0.2); }
-        .footer { position: absolute; bottom: 30px; font-size: 12px; color: #444; }
+
+        .btn { 
+            pointer-events: auto; /* 按钮恢复交互 */
+            padding: 12px 40px; border: 1px solid rgba(255,255,255,0.3); 
+            background: rgba(255,255,255,0.05); color: #fff; text-decoration: none; 
+            transition: 0.4s; backdrop-filter: blur(5px); 
+        }
+
+        .btn:hover { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 30px rgba(96, 165, 250, 0.4); }
+
+        .footer { position: absolute; bottom: 30px; font-size: 10px; color: #444; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-    <div class="bg"></div>
+
+    <div id="particles-js"></div>
+
     <div class="content">
-        <div class="tag">FLYUN STUDIO | PHASE 01</div>
+        <div class="tag">AEROYUN INITIATIVE | 2026</div>
         <h1>AERO<span style="font-weight:200">YUN</span></h1>
-        <p>虚拟展馆、AI智能体与独立游戏的交汇处。我们正在云端构建下一代交互体验。</p>
-        <a href="mailto:contact@aeroyun.xyz" class="btn">CONTACT US</a>
-        <div class="footer">© 2026 AEROMIND INITIATIVE. ALL RIGHTS RESERVED.</div>
+        <p>虚拟展馆、AI 智能体与独立游戏的交汇处。<br>我们在云端构建下一代交互体验。</p>
+        <a href="mailto:contact@aeroyun.xyz" class="btn">ENTER THE CLOUD</a>
+        <div class="footer">© 2026 AEROMIND INITIATIVE. POWERED BY FLYUN STUDIO.</div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#60a5fa" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.5, "random": true },
+                "size": { "value": 3, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": "#60a5fa", "opacity": 0.2, "width": 1 },
+                "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": { "enable": true, "mode": "grab" },
+                    "onclick": { "enable": true, "mode": "push" }
+                },
+                "modes": {
+                    "grab": { "distance": 140, "line_linked": { "opacity": 1 } },
+                    "push": { "particles_nb": 4 }
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
 </body>
 </html>
