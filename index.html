@@ -26,7 +26,8 @@
         .tag { 
             padding: 4px 12px; background: rgba(96, 165, 250, 0.1); 
             border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 50px; 
-            font-size: 12px; letter-spacing: 2px; color: #60a5fa; margin-bottom: 24px; 
+            font-size: 11px; letter-spacing: 2px; color: #60a5fa; margin-bottom: 24px;
+            text-transform: uppercase;
         }
 
         h1 { 
@@ -35,16 +36,24 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
         }
 
-        p { font-size: 1.1rem; color: #888; max-width: 500px; line-height: 1.6; margin: 20px 0 40px; }
+        p { font-size: 1.1rem; color: #888; max-width: 540px; line-height: 1.6; margin: 20px 0 40px; padding: 0 20px; }
+
+        /* 按钮组 */
+        .btn-group { display: flex; gap: 15px; pointer-events: auto; }
 
         .btn { 
-            pointer-events: auto; /* 按钮恢复交互 */
-            padding: 12px 40px; border: 1px solid rgba(255,255,255,0.3); 
-            background: rgba(255,255,255,0.05); color: #fff; text-decoration: none; 
-            transition: 0.4s; backdrop-filter: blur(5px); 
+            padding: 12px 30px; border: 1px solid rgba(255,255,255,0.2); 
+            background: rgba(255,255,255,0.03); color: #fff; text-decoration: none; 
+            font-size: 14px; letter-spacing: 1px; transition: 0.4s; backdrop-filter: blur(10px); 
         }
 
-        .btn:hover { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 30px rgba(96, 165, 250, 0.4); }
+        .btn-primary {
+            border-color: rgba(96, 165, 250, 0.5);
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .btn:hover { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 30px rgba(96, 165, 250, 0.3); transform: translateY(-2px); }
+        .btn-primary:hover { background: #60a5fa; border-color: #60a5fa; color: #fff; }
 
         .footer { position: absolute; bottom: 30px; font-size: 10px; color: #444; letter-spacing: 1px; }
     </style>
@@ -54,10 +63,15 @@
     <div id="particles-js"></div>
 
     <div class="content">
-        <div class="tag">AEROYUN INITIATIVE | 2026</div>
+        <div class="tag">FLYUN STUDIO | PHASE 01</div>
         <h1>AERO<span style="font-weight:200">YUN</span></h1>
-        <p>虚拟展馆、AI 智能体与独立游戏的交汇处。<br>我们在云端构建下一代交互体验。</p>
-        <a href="mailto:contact@aeroyun.xyz" class="btn">ENTER THE CLOUD</a>
+        <p>AI智能体与独立游戏的交汇处。<br>我们在云端构建下一代交互。 </p>
+        
+        <div class="btn-group">
+            <a href="mailto:supkefly@gmail.com" class="btn">CONTACT</a>
+            <a href="blog.html" class="btn btn-primary">READ LOGS →</a>
+        </div>
+
         <div class="footer">© 2026 AEROMIND INITIATIVE. POWERED BY FLYUN STUDIO.</div>
     </div>
 
@@ -65,22 +79,44 @@
     <script>
         particlesJS("particles-js", {
             "particles": {
-                "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                "number": { "value": 100, "density": { "enable": true, "value_area": 800 } },
                 "color": { "value": "#60a5fa" },
                 "shape": { "type": "circle" },
-                "opacity": { "value": 0.5, "random": true },
-                "size": { "value": 3, "random": true },
-                "line_linked": { "enable": true, "distance": 150, "color": "#60a5fa", "opacity": 0.2, "width": 1 },
-                "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" }
+                "opacity": { 
+                    "value": 0.4, 
+                    "random": true,
+                    "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false }
+                },
+                "size": { 
+                    "value": 3, 
+                    "random": true,
+                    "anim": { "enable": false }
+                },
+                "line_linked": { 
+                    "enable": true, 
+                    "distance": 150, 
+                    "color": "#60a5fa", 
+                    "opacity": 0.15, 
+                    "width": 1 
+                },
+                "move": { 
+                    "enable": true, 
+                    "speed": 1.5, 
+                    "direction": "none", 
+                    "random": true, 
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false
+                }
             },
             "interactivity": {
                 "detect_on": "canvas",
                 "events": {
-                    "onhover": { "enable": true, "mode": "grab" },
+                    "onhover": { "enable": true, "mode": "bubble" }, /* 鼠标经过粒子会放大，更有交互感 */
                     "onclick": { "enable": true, "mode": "push" }
                 },
                 "modes": {
-                    "grab": { "distance": 140, "line_linked": { "opacity": 1 } },
+                    "bubble": { "distance": 200, "size": 6, "duration": 2, "opacity": 0.8, "speed": 3 },
                     "push": { "particles_nb": 4 }
                 }
             },
