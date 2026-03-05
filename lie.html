@@ -2,28 +2,38 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Flyun 猎头寻访管理系统 - 增强版</title>
+    <title>Flyun 猎头寻访管理系统 - 专业版</title>
     <style>
         body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; padding: 20px; }
         .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { color: #333; text-align: center; margin-bottom: 25px; }
         
+        /* 登录遮罩层 */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .login-box { background: white; padding: 40px; border-radius: 8px; text-align: center; width: 300px; }
+        .login-box input { width: 100%; padding: 10px; margin: 15px 0; box-sizing: border-box; }
+
         /* 表单区域 */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 13px; color: #666; margin-bottom: 5px; font-weight: bold; }
         input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         
-        /* 状态颜色定义 */
-        .status-fit { background-color: #e6ffed; color: #28a745; font-weight: bold; } /* 合适-绿 */
-        .status-unfit { background-color: #fff1f0; color: #f5222d; font-weight: bold; } /* 不合适-红 */
-        .status-contacting { background-color: #fffbe6; color: #faad14; font-weight: bold; } /* 联系中-黄 */
+        /* 状态颜色 */
+        .status-fit { background-color: #e6ffed; color: #28a745; font-weight: bold; }
+        .status-unfit { background-color: #fff1f0; color: #f5222d; font-weight: bold; }
+        .status-contacting { background-color: #fffbe6; color: #faad14; font-weight: bold; }
 
         /* 按钮 */
         .actions { display: flex; gap: 15px; justify-content: center; margin: 25px 0; }
         .btn { padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 14px; transition: 0.2s; }
         .btn-add { background: #007bff; }
         .btn-export { background: #28a745; }
+        .btn-logout { background: #666; }
         .btn-delete { background: #ff4d4f; padding: 4px 8px; font-size: 12px; }
         .btn:hover { opacity: 0.8; transform: translateY(-1px); }
 
@@ -37,7 +47,17 @@
 </head>
 <body>
 
-<div class="container">
+<div id="loginOverlay">
+    <div class="login-box">
+        <h3>系统登录</h3>
+        <p style="font-size: 12px; color: #888;">请输入您的专属访问密码</p>
+        <input type="password" id="passInput" placeholder="请输入密码" onkeydown="if(event.keyCode==13) login()">
+        <button class="btn btn-add" style="width: 100%" onclick="login()">进入系统</button>
+        <p id="loginMsg" style="color: red; font-size: 12px; margin-top: 10px;"></p>
+    </div>
+</div>
+
+<div class="container" id="mainContent" style="display: none;">
     <h2>Flyun 候选人寻访看板</h2>
     
     <div class="form-grid">
@@ -46,9 +66,9 @@
         <div class="form-group">
             <label>状态</label>
             <select id="status">
-                <option value="合适">合适 (绿色)</option>
-                <option value="不合适">不合适 (红色)</option>
-                <option value="正在联系中">正在联系中 (黄色)</option>
+                <option value="合适">合适</option>
+                <option value="不合适">不合适</option>
+                <option value="正在联系中">正在联系中</option>
             </select>
         </div>
         <div class="form-group"><label>现公司</label><input type="text" id="currCompany"></div>
@@ -60,6 +80,7 @@
     <div class="actions">
         <button class="btn btn-add" onclick="addRow()">加入寻访名单</button>
         <button class="btn btn-export" onclick="exportCSV()">导出 Excel 表格</button>
+        <button class="btn btn-logout" onclick="logout()">安全退出</button>
     </div>
 
     <div class="table-container">
@@ -75,12 +96,64 @@
 </div>
 
 <script>
+    // --- 用户配置区 ---
+    // 您可以在这里设置不同的用户及其密码
+    const USERS = {
+        "admin": "123456",
+        "flyun01": "flyun888",
+        "guest": "666666"
+    };
+
+    let currentUser = "";
     let dataList = [];
 
-    // 添加记录
+    // --- 登录逻辑 ---
+    function login() {
+        const pass = document.getElementById('passInput').value;
+        let foundUser = "";
+
+        for (let user in USERS) {
+            if (USERS[user] === pass) {
+                foundUser = user;
+                break;
+            }
+        }
+
+        if (foundUser) {
+            currentUser = foundUser;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            loadData(); // 登录成功后加载该用户的数据
+        } else {
+            document.getElementById('loginMsg').innerText = "密码错误，请重试";
+        }
+    }
+
+    function logout() {
+        location.reload(); // 简单处理，刷新即退出
+    }
+
+    // --- 数据持久化逻辑 ---
+    // 加载数据：根据当前用户名从 LocalStorage 获取
+    function loadData() {
+        const savedData = localStorage.getItem('flyun_data_' + currentUser);
+        if (savedData) {
+            dataList = JSON.parse(savedData);
+        } else {
+            dataList = [];
+        }
+        renderTable();
+    }
+
+    // 保存数据：每次增删操作后调用
+    function saveData() {
+        localStorage.setItem('flyun_data_' + currentUser, JSON.stringify(dataList));
+    }
+
+    // --- 表格操作逻辑 ---
     function addRow() {
         const row = {
-            id: Date.now(), // 唯一ID用于删除
+            id: Date.now(),
             name: document.getElementById('name').value,
             status: document.getElementById('status').value,
             recCompany: document.getElementById('recCompany').value,
@@ -93,30 +166,27 @@
         if(!row.name) { alert("姓名是必填项"); return; }
 
         dataList.push(row);
+        saveData(); // 保存到本地
         renderTable();
         
-        // 自动清空部分输入，方便连续录入
         document.getElementById('name').value = '';
         document.getElementById('contact').value = '';
     }
 
-    // 删除记录
     function deleteRow(id) {
         if(confirm('确定要删除这条记录吗？')) {
             dataList = dataList.filter(item => item.id !== id);
+            saveData(); // 保存修改
             renderTable();
         }
     }
 
-    // 渲染表格并应用颜色逻辑
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
 
         dataList.forEach(item => {
             const tr = document.createElement("tr");
-            
-            // 根据状态判断颜色类名
             let statusClass = "";
             if (item.status === "合适") statusClass = "status-fit";
             else if (item.status === "不合适") statusClass = "status-unfit";
@@ -136,31 +206,22 @@
         });
     }
 
-    // 导出 CSV (Excel 支持)
     function exportCSV() {
         if (dataList.length === 0) { alert("暂无数据可导出"); return; }
-
-        let csvContent = "\ufeff"; // BOM防止中文乱码
+        let csvContent = "\ufeff"; 
         const headers = ["姓名", "状态", "推荐公司", "现公司", "电话/微信", "学校", "备注"];
         csvContent += headers.join(",") + "\n";
         
         dataList.forEach(item => {
-            const row = [
-                item.name,
-                item.status,
-                item.recCompany,
-                item.currCompany,
-                item.contact,
-                item.school,
-                item.note
-            ].map(v => `"${v.replace(/"/g, '""')}"`); // 处理逗号
+            const row = [item.name, item.status, item.recCompany, item.currCompany, item.contact, item.school, item.note]
+                        .map(v => `"${(v||"").replace(/"/g, '""')}"`);
             csvContent += row.join(",") + "\n";
         });
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `寻访报告_${new Date().toLocaleDateString()}.csv`;
+        link.download = `寻访报告_${currentUser}_${new Date().toLocaleDateString()}.csv`;
         link.click();
     }
 </script>
