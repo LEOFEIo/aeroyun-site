@@ -2,131 +2,166 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Flyun 猎头寻访系统 - 稳定导出版</title>
+    <title>Flyun 猎头寻访管理系统 - 增强版</title>
     <style>
-        body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-        h2 { color: #1890ff; text-align: center; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; padding: 20px; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #333; text-align: center; margin-bottom: 25px; }
         
-        /* 表单样式 */
-        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 5px; }
+        /* 表单区域 */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; }
         .form-group { display: flex; flex-direction: column; }
-        label { font-size: 12px; color: #666; margin-bottom: 4px; }
-        input { padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px; }
+        label { font-size: 13px; color: #666; margin-bottom: 5px; font-weight: bold; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         
+        /* 状态颜色定义 */
+        .status-fit { background-color: #e6ffed; color: #28a745; font-weight: bold; } /* 合适-绿 */
+        .status-unfit { background-color: #fff1f0; color: #f5222d; font-weight: bold; } /* 不合适-红 */
+        .status-contacting { background-color: #fffbe6; color: #faad14; font-weight: bold; } /* 联系中-黄 */
+
         /* 按钮 */
-        .actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        .btn { padding: 10px 25px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
-        .btn-add { background: #1890ff; }
-        .btn-export { background: #52c41a; }
-        .btn:hover { opacity: 0.8; }
+        .actions { display: flex; gap: 15px; justify-content: center; margin: 25px 0; }
+        .btn { padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn-add { background: #007bff; }
+        .btn-export { background: #28a745; }
+        .btn-delete { background: #ff4d4f; padding: 4px 8px; font-size: 12px; }
+        .btn:hover { opacity: 0.8; transform: translateY(-1px); }
 
         /* 表格 */
-        .table-box { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { border: 1px solid #e8e8e8; padding: 12px 8px; text-align: left; }
-        th { background: #fafafa; font-weight: 600; }
+        .table-container { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 1000px; }
+        th, td { border: 1px solid #e8e8e8; padding: 12px 10px; text-align: left; font-size: 13px; }
+        th { background: #fafafa; color: #333; }
+        tr:hover { background-color: #f5f5f5; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>候选人寻访登记 (Mapping)</h2>
+    <h2>Flyun 候选人寻访看板</h2>
     
     <div class="form-grid">
-        <div class="form-group"><label>推荐公司</label><input type="text" id="f1"></div>
-        <div class="form-group"><label>推荐岗位</label><input type="text" id="f2"></div>
-        <div class="form-group"><label>姓名</label><input type="text" id="f3"></div>
-        <div class="form-group"><label>性别</label><input type="text" id="f4"></div>
-        <div class="form-group"><label>状态</label><input type="text" id="f5"></div>
-        <div class="form-group"><label>现公司</label><input type="text" id="f6"></div>
-        <div class="form-group"><label>电话/微信</label><input type="text" id="f7"></div>
-        <div class="form-group"><label>邮箱</label><input type="text" id="f8"></div>
-        <div class="form-group"><label>学校</label><input type="text" id="f9"></div>
-        <div class="form-group"><label>备注</label><input type="text" id="f10"></div>
+        <div class="form-group"><label>推荐公司</label><input type="text" id="recCompany"></div>
+        <div class="form-group"><label>姓名</label><input type="text" id="name"></div>
+        <div class="form-group">
+            <label>状态</label>
+            <select id="status">
+                <option value="合适">合适 (绿色)</option>
+                <option value="不合适">不合适 (红色)</option>
+                <option value="正在联系中">正在联系中 (黄色)</option>
+            </select>
+        </div>
+        <div class="form-group"><label>现公司</label><input type="text" id="currCompany"></div>
+        <div class="form-group"><label>电话/微信</label><input type="text" id="contact"></div>
+        <div class="form-group"><label>学校</label><input type="text" id="school"></div>
+        <div class="form-group"><label>备注</label><input type="text" id="note"></div>
     </div>
 
     <div class="actions">
-        <button class="btn btn-add" onclick="addRow()">添加至列表</button>
-        <button class="btn btn-export" onclick="exportCSV()">一键导出表格 (Excel兼容)</button>
+        <button class="btn btn-add" onclick="addRow()">加入寻访名单</button>
+        <button class="btn btn-export" onclick="exportCSV()">导出 Excel 表格</button>
     </div>
 
-    <div class="table-box">
+    <div class="table-container">
         <table id="myTable">
             <thead>
                 <tr>
-                    <th>推荐公司</th><th>推荐岗位</th><th>姓名</th><th>性别</th><th>状态</th>
-                    <th>现公司</th><th>电话/微信</th><th>邮箱</th><th>学校</th><th>备注</th>
+                    <th>姓名</th><th>状态</th><th>推荐公司</th><th>现公司</th><th>电话/微信</th><th>学校</th><th>备注</th><th>操作</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const dataList = [];
-    const headers = ["推荐公司", "推荐岗位", "姓名", "性别", "状态", "现公司", "电话/微信", "邮箱", "学校", "备注"];
+    let dataList = [];
 
+    // 添加记录
     function addRow() {
-        const row = [];
-        for(let i=1; i<=10; i++) {
-            row.push(document.getElementById('f' + i).value);
-        }
+        const row = {
+            id: Date.now(), // 唯一ID用于删除
+            name: document.getElementById('name').value,
+            status: document.getElementById('status').value,
+            recCompany: document.getElementById('recCompany').value,
+            currCompany: document.getElementById('currCompany').value,
+            contact: document.getElementById('contact').value,
+            school: document.getElementById('school').value,
+            note: document.getElementById('note').value
+        };
 
-        if(!row[2]) { alert("请输入姓名！"); return; }
+        if(!row.name) { alert("姓名是必填项"); return; }
 
         dataList.push(row);
         renderTable();
         
-        // 清空输入
-        document.getElementById('f3').value = '';
-        document.getElementById('f7').value = '';
+        // 自动清空部分输入，方便连续录入
+        document.getElementById('name').value = '';
+        document.getElementById('contact').value = '';
     }
 
+    // 删除记录
+    function deleteRow(id) {
+        if(confirm('确定要删除这条记录吗？')) {
+            dataList = dataList.filter(item => item.id !== id);
+            renderTable();
+        }
+    }
+
+    // 渲染表格并应用颜色逻辑
     function renderTable() {
-        const tbody = document.querySelector("#myTable tbody");
+        const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
-        dataList.forEach(rowData => {
+
+        dataList.forEach(item => {
             const tr = document.createElement("tr");
-            rowData.forEach(cellData => {
-                const td = document.createElement("td");
-                td.textContent = cellData;
-                tr.appendChild(td);
-            });
+            
+            // 根据状态判断颜色类名
+            let statusClass = "";
+            if (item.status === "合适") statusClass = "status-fit";
+            else if (item.status === "不合适") statusClass = "status-unfit";
+            else if (item.status === "正在联系中") statusClass = "status-contacting";
+
+            tr.innerHTML = `
+                <td>${item.name}</td>
+                <td class="${statusClass}">${item.status}</td>
+                <td>${item.recCompany}</td>
+                <td>${item.currCompany}</td>
+                <td>${item.contact}</td>
+                <td>${item.school}</td>
+                <td>${item.note}</td>
+                <td><button class="btn btn-delete" onclick="deleteRow(${item.id})">删除</button></td>
+            `;
             tbody.appendChild(tr);
         });
     }
 
-    // 稳定导出功能：使用 CSV 格式，Excel 可直接打开
+    // 导出 CSV (Excel 支持)
     function exportCSV() {
-        if (dataList.length === 0) {
-            alert("列表里还没有数据哦！");
-            return;
-        }
+        if (dataList.length === 0) { alert("暂无数据可导出"); return; }
 
-        // 构造 CSV 内容
-        let csvContent = "\ufeff"; // 添加 BOM 头，防止 Excel 打开中文乱码
+        let csvContent = "\ufeff"; // BOM防止中文乱码
+        const headers = ["姓名", "状态", "推荐公司", "现公司", "电话/微信", "学校", "备注"];
         csvContent += headers.join(",") + "\n";
         
-        dataList.forEach(row => {
-            // 处理可能存在的逗号，防止分列错误
-            const cleanRow = row.map(cell => `"${cell.replace(/"/g, '""')}"`);
-            csvContent += cleanRow.join(",") + "\n";
+        dataList.forEach(item => {
+            const row = [
+                item.name,
+                item.status,
+                item.recCompany,
+                item.currCompany,
+                item.contact,
+                item.school,
+                item.note
+            ].map(v => `"${v.replace(/"/g, '""')}"`); // 处理逗号
+            csvContent += row.join(",") + "\n";
         });
 
-        // 创建下载链接
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        
-        link.setAttribute("href", url);
-        link.setAttribute("download", `寻访数据_${new Date().getTime()}.csv`);
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
+        link.href = URL.createObjectURL(blob);
+        link.download = `寻访报告_${new Date().toLocaleDateString()}.csv`;
         link.click();
-        document.body.removeChild(link);
     }
 </script>
 
