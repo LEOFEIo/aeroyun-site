@@ -2,81 +2,123 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Flyun 猎头寻访系统 - 全字段增强版</title>
+    <title>Flyun 智能寻访管理系统</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #007bff; --success: #28a745; --warning: #faad14; --danger: #ff4d4f; }
-        body { font-family: 'PingFang SC', sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 1500px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root { 
+            --primary: #2563eb; 
+            --primary-hover: #1d4ed8;
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444; 
+            --bg-body: #f8fafc;
+        }
+
+        body { font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif; background: var(--bg-body); padding: 0; margin: 0; }
+
+        /* --- 登录页面美化 --- */
+        #loginOverlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
+            display: flex; justify-content: center; align-items: center; 
+            z-index: 9999; 
+            transition: all 0.5s ease;
+        }
+
+        .login-box { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 40px; 
+            border-radius: 20px; 
+            width: 360px; 
+            text-align: center; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-box h2 { color: #1e293b; margin-bottom: 10px; font-size: 24px; font-weight: 800; }
+        .login-box p { color: #64748b; font-size: 14px; margin-bottom: 30px; }
+
+        .login-input-group { position: relative; margin-bottom: 20px; }
+        .login-box input { 
+            width: 100%; padding: 12px 15px; border: 1.5px solid #e2e8f0; border-radius: 10px; 
+            font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;
+        }
+        .login-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+
+        .btn-login { 
+            width: 100%; background: var(--primary); color: white; padding: 12px; 
+            border: none; border-radius: 10px; font-size: 16px; font-weight: 600; 
+            cursor: pointer; transition: 0.3s; 
+        }
+        .btn-login:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        /* --- 主界面样式 --- */
+        .container { max-width: 1400px; margin: 30px auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h1.title { color: #0f172a; text-align: center; margin-bottom: 40px; font-weight: 700; }
+
+        .section-title { border-left: 5px solid var(--primary); padding-left: 15px; margin: 30px 0 15px; font-weight: 600; color: #1e293b; }
         
-        /* 登录设计 */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 30px; border-radius: 10px; text-align: center; }
-
-        /* 标题与搜索 */
-        .section-title { border-left: 4px solid var(--primary); padding-left: 10px; margin: 20px 0; font-weight: bold; font-size: 16px; }
-        .search-helper { background: #eef7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .search-btn { background: #55acee; color: white; padding: 8px 12px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
-
-        /* 严格字段栅格布局 - 适配15个框 */
         .form-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-            gap: 15px; 
-            background: #fafafa; 
-            padding: 20px; 
-            border-radius: 8px; 
-            border: 1px solid #eee; 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; 
+            background: #f1f5f9; padding: 25px; border-radius: 12px; 
         }
         .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 12px; color: #555; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .form-group label { font-size: 13px; color: #475569; margin-bottom: 6px; font-weight: 600; }
+        .form-group input, .form-group select { 
+            padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; 
+        }
+
+        .actions { display: flex; justify-content: center; gap: 15px; margin: 40px 0; }
+        .btn { padding: 12px 25px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; border: none; }
+        .btn-add { background: var(--primary); color: white; }
+        .btn-excel { background: var(--success); color: white; }
+        .btn-logout { background: #94a3b8; color: white; }
+        .btn:hover { opacity: 0.9; transform: scale(1.02); }
 
         /* 表格样式 */
-        .table-container { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1600px; }
-        th, td { border: 1px solid #e8e8e8; padding: 10px; text-align: left; font-size: 12px; }
-        th { background: #f5f5f5; position: sticky; top: 0; }
+        .table-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1800px; }
+        th { background: #f8fafc; padding: 15px 12px; text-align: left; font-size: 13px; color: #64748b; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #1e293b; }
         
-        .status-fit { background-color: #e6ffed !important; color: var(--success); font-weight: bold; }
-        .status-unfit { background-color: #fff1f0 !important; color: var(--danger); font-weight: bold; }
-        .status-contacting { background-color: #fffbe6 !important; color: var(--warning); font-weight: bold; }
+        .status-fit { background-color: #dcfce7 !important; color: #166534; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+        .status-unfit { background-color: #fee2e2 !important; color: #991b1b; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+        .status-contacting { background-color: #fef9c3 !important; color: #854d0e; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
 
-        .btn { padding: 10px 25px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s; }
-        .btn-add { background: var(--primary); }
-        .btn-excel { background: var(--success); }
+        .del-link { color: var(--danger); cursor: pointer; text-decoration: underline; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h3>Flyun 猎头寻访系统</h3>
-        <input type="password" id="sysPass" placeholder="输入密码 (如: 123456)" style="width:100%; padding:10px; margin:15px 0;">
-        <button class="btn btn-add" style="width:100%" onclick="handleLogin()">进入系统</button>
+        <h2>Flyun System</h2>
+        <p>猎头寻访智能管理平台</p>
+        <div class="login-input-group">
+            <input type="password" id="sysPass" placeholder="请输入访问密码" onkeydown="if(event.keyCode==13) handleLogin()">
+        </div>
+        <button class="btn-login" onclick="handleLogin()">登 录 系统</button>
+        <div id="loginError" style="color:red; font-size:12px; margin-top:15px; display:none;">密码错误，请重新输入</div>
     </div>
 </div>
 
 <div class="container" id="appBody" style="display:none">
-    <h2>Flyun 候选人寻访看板</h2>
+    <h1 class="title">候选人寻访看板</h1>
 
-    <div class="section-title">全网寻人助手</div>
-    <div class="search-helper">
-        <input type="text" id="targetInfo" placeholder="人名 / 公司+岗位 / 学校" style="flex:1; padding:8px; border:1px solid #ddd;">
-        <button onclick="quickSearch('boss')" class="search-btn">BOSS直聘</button>
-        <button onclick="quickSearch('liepin')" class="search-btn">猎聘</button>
-        <button onclick="quickSearch('linkedin')" class="search-btn" style="background:#0077b5">LinkedIn</button>
-    </div>
-
-    <div class="section-title">寻访信息录入 (全字段)</div>
+    <div class="section-title">寻访信息录入 (严格16个环节)</div>
     <div class="form-grid">
         <div class="form-group"><label>1. 推荐公司</label><input type="text" id="recCompany"></div>
-        <div class="form-group"><label>2. 推荐岗位名称</label><input type="text" id="recJob"></div>
+        <div class="form-group"><label>2. 推荐的岗位名称</label><input type="text" id="recJob"></div>
         <div class="form-group"><label>3. 姓名</label><input type="text" id="name"></div>
-        <div class="form-group">
-            <label>4. 性别</label>
-            <select id="gender"><option value="男">男</option><option value="女">女</option></select>
-        </div>
+        <div class="form-group"><label>4. 性别</label><select id="gender"><option value="男">男</option><option value="女">女</option></select></div>
+        
         <div class="form-group">
             <label>5. 状态</label>
             <select id="status">
@@ -85,31 +127,32 @@
                 <option value="不合适">不合适</option>
             </select>
         </div>
-        <div class="form-group"><label>6. 出生年份</label><input type="number" id="birthYear" placeholder="例: 1995"></div>
-        <div class="form-group"><label>7. 岗位产品</label><input type="text" id="jobProduct" placeholder="如: 芯片/SaaS"></div>
-        <div class="form-group"><label>8. 目前所在地</label><input type="text" id="currCity"></div>
-        <div class="form-group"><label>9. 期望所在地</label><input type="text" id="expCity"></div>
+        <div class="form-group"><label>6. 出生年份</label><input type="text" id="birthYear" placeholder="如 1990"></div>
+        <div class="form-group"><label>7. 岗位产品</label><input type="text" id="jobProduct"></div>
+        <div class="form-group"><label>8. 目前所在地</label><input type="text" id="currLoc"></div>
+
+        <div class="form-group"><label>9. 期望所在地</label><input type="text" id="expLoc"></div>
         <div class="form-group"><label>10. 现公司</label><input type="text" id="currCompany"></div>
         <div class="form-group"><label>11. 电话/微信号</label><input type="text" id="contact"></div>
-        <div class="form-group"><label>12. 邮箱</label><input type="email" id="email"></div>
-        <div class="form-group"><label>13. 学历</label><input type="text" id="eduLevel" placeholder="本科/硕士"></div>
-        <div class="form-group"><label>14. 入学年份</label><input type="text" id="eduYear"></div>
+        <div class="form-group"><label>12. 邮箱</label><input type="text" id="email"></div>
+
+        <div class="form-group"><label>13. 学历</label><input type="text" id="eduLevel"></div>
+        <div class="form-group"><label>14. 入学年份</label><input type="text" id="eduInYear"></div>
         <div class="form-group"><label>15. 学校</label><input type="text" id="school"></div>
-        <div class="form-group" style="grid-column: span 2;"><label>16. 备注</label><input type="text" id="note"></div>
+        <div class="form-group"><label>16. 备注</label><input type="text" id="note"></div>
     </div>
 
-    <div style="text-align:center; margin: 25px 0;">
-        <button class="btn btn-add" onclick="addRow()">加入寻访名单</button>
-        <button class="btn btn-excel" onclick="exportToExcel()">导出 Excel 表格 (.xlsx)</button>
-        <button class="btn" style="background:#888" onclick="location.reload()">退出登录</button>
+    <div class="actions">
+        <button class="btn btn-add" onclick="addRow()">✅ 加入寻访名单</button>
+        <button class="btn btn-excel" onclick="exportToExcel()">📊 导出 Excel 表格</button>
+        <button class="btn btn-logout" onclick="location.reload()">🔒 退出登录</button>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>姓名</th><th>状态</th><th>性别</th><th>推荐公司</th><th>推荐岗位</th><th>出生年份</th>
-                    <th>目前所在地</th><th>现公司</th><th>电话/微信</th><th>学校</th><th>备注</th><th>操作</th>
+                    <th>姓名</th><th>状态</th><th>岗位</th><th>性别</th><th>出生年</th><th>现公司</th><th>目前所在地</th><th>电话/微信</th><th>学历</th><th>学校</th><th>备注</th><th>操作</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -118,39 +161,31 @@
 </div>
 
 <script>
-    const USER_CONFIG = { "123456": "db_admin", "flyun888": "db_staff" };
+    // 密码配置
+    const USER_CONFIG = { "123456": "db_v2_admin", "flyun888": "db_v2_staff" };
     let activeKey = "";
     let dataList = [];
 
-    // 1. 登录与加载
     function handleLogin() {
-        const pass = document.getElementById('sysPass').value;
-        if (USER_CONFIG[pass]) {
-            activeKey = USER_CONFIG[pass];
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('appBody').style.display = 'block';
-            loadData();
-        } else { alert("密码错误！"); }
+        const p = document.getElementById('sysPass').value;
+        if (USER_CONFIG[p]) {
+            activeKey = USER_CONFIG[p];
+            document.getElementById('loginOverlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('appBody').style.display = 'block';
+                loadData();
+            }, 500);
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
     }
 
     function loadData() {
-        const saved = localStorage.getItem(activeKey);
-        if (saved) { dataList = JSON.parse(saved); renderTable(); }
+        const s = localStorage.getItem(activeKey);
+        if (s) { dataList = JSON.parse(s); renderTable(); }
     }
 
-    // 2. 一键搜人
-    function quickSearch(platform) {
-        const kw = document.getElementById('targetInfo').value;
-        if (!kw) return alert("请输入搜索关键词");
-        const urls = {
-            'boss': `https://www.zhipin.com/web/geek/resume?query=${encodeURIComponent(kw)}`,
-            'liepin': `https://www.liepin.com/zhaopin/?key=${encodeURIComponent(kw)}`,
-            'linkedin': `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(kw)}`
-        };
-        window.open(urls[platform], '_blank');
-    }
-
-    // 3. 录入数据 (15个核心字段)
     function addRow() {
         const row = {
             id: Date.now(),
@@ -161,70 +196,68 @@
             status: document.getElementById('status').value,
             birthYear: document.getElementById('birthYear').value,
             jobProduct: document.getElementById('jobProduct').value,
-            currCity: document.getElementById('currCity').value,
-            expCity: document.getElementById('expCity').value,
+            currLoc: document.getElementById('currLoc').value,
+            expLoc: document.getElementById('expLoc').value,
             currCompany: document.getElementById('currCompany').value,
             contact: document.getElementById('contact').value,
             email: document.getElementById('email').value,
             eduLevel: document.getElementById('eduLevel').value,
-            eduYear: document.getElementById('eduYear').value,
+            eduInYear: document.getElementById('eduInYear').value,
             school: document.getElementById('school').value,
             note: document.getElementById('note').value
         };
 
-        if (!row.name) return alert("姓名是必填项！");
-
+        if (!row.name) return alert("请输入候选人姓名");
         dataList.push(row);
         localStorage.setItem(activeKey, JSON.stringify(dataList));
         renderTable();
-        alert("已成功录入名单！");
+        alert("录入成功！");
     }
 
-    // 4. 渲染表格 (只显示核心列，完整数据在Excel)
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
         dataList.forEach(item => {
             const tr = document.createElement("tr");
-            let cls = item.status === "合适" ? "status-fit" : (item.status === "不合适" ? "status-unfit" : "status-contacting");
+            let statusStyle = item.status === "合适" ? "status-fit" : (item.status === "不合适" ? "status-unfit" : "status-contacting");
             tr.innerHTML = `
-                <td>${item.name}</td><td class="${cls}">${item.status}</td>
-                <td>${item.gender}</td><td>${item.recCompany}</td><td>${item.recJob}</td>
-                <td>${item.birthYear}</td><td>${item.currCity}</td><td>${item.currCompany}</td>
-                <td>${item.contact}</td><td>${item.school}</td><td>${item.note}</td>
-                <td><button onclick="del(${item.id})" style="color:red; border:none; background:none; cursor:pointer">删除</button></td>
+                <td><strong>${item.name}</strong></td>
+                <td><span class="${statusStyle}">${item.status}</span></td>
+                <td>${item.recJob}</td>
+                <td>${item.gender}</td>
+                <td>${item.birthYear}</td>
+                <td>${item.currCompany}</td>
+                <td>${item.currLoc}</td>
+                <td>${item.contact}</td>
+                <td>${item.eduLevel}</td>
+                <td>${item.school}</td>
+                <td>${item.note}</td>
+                <td><span class="del-link" onclick="del(${item.id})">删除</span></td>
             `;
             tbody.appendChild(tr);
         });
     }
 
     function del(id) {
-        if(confirm("确定删除吗？")) {
+        if(confirm("确定删除该记录吗？")) {
             dataList = dataList.filter(i => i.id !== id);
             localStorage.setItem(activeKey, JSON.stringify(dataList));
             renderTable();
         }
     }
 
-    // 5. 核心：导出 Excel (严格包含所有15个环节)
     function exportToExcel() {
-        if(dataList.length === 0) return alert("暂无数据可导出");
-
-        // 定义表头顺序
-        const headers = ["推荐公司", "推荐岗位名称", "姓名", "性别", "状态", "出生年份", "岗位产品", "目前所在地", "期望所在地", "现公司", "电话/微信号", "邮箱", "学历", "入学年份", "学校", "备注"];
-        
-        // 转换数据格式
-        const excelData = dataList.map(item => [
-            item.recCompany, item.recJob, item.name, item.gender, item.status, 
-            item.birthYear, item.jobProduct, item.currCity, item.expCity, 
-            item.currCompany, item.contact, item.email, item.eduLevel, 
-            item.eduYear, item.school, item.note
+        if(dataList.length === 0) return alert("当前无数据可导出");
+        const header = ["推荐公司", "推荐岗位名称", "姓名", "性别", "状态", "出生年份", "岗位产品", "目前所在地", "期望所在地", "现公司", "电话/微信号", "邮箱", "学历", "入学年份", "学校", "备注"];
+        const rows = dataList.map(i => [
+            i.recCompany, i.recJob, i.name, i.gender, i.status, i.birthYear, 
+            i.jobProduct, i.currLoc, i.expLoc, i.currCompany, i.contact, 
+            i.email, i.eduLevel, i.eduInYear, i.school, i.note
         ]);
-
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...excelData]);
+        const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "寻访报告");
-        XLSX.writeFile(wb, `Flyun寻访名单_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.writeFile(wb, `Flyun人才报表_${new Date().toLocaleDateString()}.xlsx`);
     }
 </script>
 </body>
