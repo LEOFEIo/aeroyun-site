@@ -2,124 +2,133 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flyun 猎头寻访管理工具</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <title>Flyun 猎头寻访系统 - 稳定导出版</title>
     <style>
-        body { font-family: 'PingFang SC', sans-serif; background-color: #f5f7fa; padding: 20px; color: #333; }
-        .container { max-width: 1100px; margin: auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h2 { color: #0052cc; border-bottom: 2px solid #0052cc; padding-bottom: 10px; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+        h2 { color: #1890ff; text-align: center; }
         
-        /* 表单布局 */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        /* 表单样式 */
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 5px; }
         .form-group { display: flex; flex-direction: column; }
-        label { font-size: 13px; margin-bottom: 5px; color: #666; font-weight: bold; }
-        input, select { padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; outline: none; }
-        input:focus { border-color: #409eff; }
+        label { font-size: 12px; color: #666; margin-bottom: 4px; }
+        input { padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px; }
+        
+        /* 按钮 */
+        .actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .btn { padding: 10px 25px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-add { background: #1890ff; }
+        .btn-export { background: #52c41a; }
+        .btn:hover { opacity: 0.8; }
 
-        /* 按钮样式 */
-        .btn-group { margin-top: 20px; display: flex; gap: 10px; }
-        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-add { background-color: #409eff; color: white; }
-        .btn-export { background-color: #67c23a; color: white; }
-        button:hover { opacity: 0.8; }
-
-        /* 表格样式 */
-        .table-container { margin-top: 30px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border: 1px solid #ebeef5; padding: 10px; text-align: left; }
-        th { background-color: #f8f9fb; color: #909399; }
-        tr:nth-child(even) { background-color: #fafafa; }
+        /* 表格 */
+        .table-box { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #e8e8e8; padding: 12px 8px; text-align: left; }
+        th { background: #fafafa; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>候选人寻访登记表 (Mapping)</h2>
+    <h2>候选人寻访登记 (Mapping)</h2>
     
-    <div class="form-grid" id="inputForm">
-        <div class="form-group"><label>推荐公司</label><input type="text" id="recCompany"></div>
-        <div class="form-group"><label>岗位名称</label><input type="text" id="jobName"></div>
-        <div class="form-group"><label>姓名</label><input type="text" id="name"></div>
-        <div class="form-group">
-            <label>性别</label>
-            <select id="gender"><option>男</option><option>女</option></select>
-        </div>
-        <div class="form-group"><label>出生年份</label><input type="number" id="birthYear" placeholder="如1995"></div>
-        <div class="form-group"><label>现公司</label><input type="text" id="currCompany"></div>
-        <div class="form-group"><label>电话/微信</label><input type="text" id="contact"></div>
-        <div class="form-group"><label>邮箱</label><input type="email" id="email"></div>
-        <div class="form-group"><label>学校</label><input type="text" id="school"></div>
-        <div class="form-group"><label>状态</label><input type="text" id="status" placeholder="已面试/待沟通"></div>
+    <div class="form-grid">
+        <div class="form-group"><label>推荐公司</label><input type="text" id="f1"></div>
+        <div class="form-group"><label>推荐岗位</label><input type="text" id="f2"></div>
+        <div class="form-group"><label>姓名</label><input type="text" id="f3"></div>
+        <div class="form-group"><label>性别</label><input type="text" id="f4"></div>
+        <div class="form-group"><label>状态</label><input type="text" id="f5"></div>
+        <div class="form-group"><label>现公司</label><input type="text" id="f6"></div>
+        <div class="form-group"><label>电话/微信</label><input type="text" id="f7"></div>
+        <div class="form-group"><label>邮箱</label><input type="text" id="f8"></div>
+        <div class="form-group"><label>学校</label><input type="text" id="f9"></div>
+        <div class="form-group"><label>备注</label><input type="text" id="f10"></div>
     </div>
 
-    <div class="btn-group">
-        <button class="btn-add" onclick="addData()">添加记录</button>
-        <button class="btn-export" onclick="exportToExcel()">导出为 Excel 表格</button>
+    <div class="actions">
+        <button class="btn btn-add" onclick="addRow()">添加至列表</button>
+        <button class="btn btn-export" onclick="exportCSV()">一键导出表格 (Excel兼容)</button>
     </div>
 
-    <div class="table-container">
-        <table id="dataTable">
+    <div class="table-box">
+        <table id="myTable">
             <thead>
                 <tr>
-                    <th>推荐公司</th><th>岗位名称</th><th>姓名</th><th>性别</th>
-                    <th>出生年份</th><th>现公司</th><th>电话/微信</th><th>邮箱</th><th>学校</th><th>状态</th>
+                    <th>推荐公司</th><th>推荐岗位</th><th>姓名</th><th>性别</th><th>状态</th>
+                    <th>现公司</th><th>电话/微信</th><th>邮箱</th><th>学校</th><th>备注</th>
                 </tr>
             </thead>
-            <tbody>
-                </tbody>
+            <tbody></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    let mappingData = [];
+    const dataList = [];
+    const headers = ["推荐公司", "推荐岗位", "姓名", "性别", "状态", "现公司", "电话/微信", "邮箱", "学校", "备注"];
 
-    function addData() {
-        const row = {
-            "推荐公司": document.getElementById('recCompany').value,
-            "推荐的岗位名称": document.getElementById('jobName').value,
-            "姓名": document.getElementById('name').value,
-            "性别": document.getElementById('gender').value,
-            "出生年份": document.getElementById('birthYear').value,
-            "现公司": document.getElementById('currCompany').value,
-            "电话/微信号": document.getElementById('contact').value,
-            "邮箱": document.getElementById('email').value,
-            "学校 ": document.getElementById('school').value,
-            "状态": document.getElementById('status').value
-        };
+    function addRow() {
+        const row = [];
+        for(let i=1; i<=10; i++) {
+            row.push(document.getElementById('f' + i).value);
+        }
 
-        if(!row["姓名"]) { alert("请输入姓名"); return; }
+        if(!row[2]) { alert("请输入姓名！"); return; }
 
-        mappingData.push(row);
-        updateTable();
+        dataList.push(row);
+        renderTable();
         
-        // 清空部分输入框
-        document.getElementById('name').value = '';
-        document.getElementById('contact').value = '';
+        // 清空输入
+        document.getElementById('f3').value = '';
+        document.getElementById('f7').value = '';
     }
 
-    function updateTable() {
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = '';
-        mappingData.forEach(item => {
-            const tr = document.createElement('tr');
-            Object.values(item).forEach(text => {
-                const td = document.createElement('td');
-                td.textContent = text;
+    function renderTable() {
+        const tbody = document.querySelector("#myTable tbody");
+        tbody.innerHTML = "";
+        dataList.forEach(rowData => {
+            const tr = document.createElement("tr");
+            rowData.forEach(cellData => {
+                const td = document.createElement("td");
+                td.textContent = cellData;
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
         });
     }
 
-    function exportToExcel() {
-        if(mappingData.length === 0) { alert("没有数据可以导出"); return; }
+    // 稳定导出功能：使用 CSV 格式，Excel 可直接打开
+    function exportCSV() {
+        if (dataList.length === 0) {
+            alert("列表里还没有数据哦！");
+            return;
+        }
+
+        // 构造 CSV 内容
+        let csvContent = "\ufeff"; // 添加 BOM 头，防止 Excel 打开中文乱码
+        csvContent += headers.join(",") + "\n";
         
-        // 创建工作簿
-        const ws = XLSX.utils.json_to_sheet(mappingData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Mapping数据");
+        dataList.forEach(row => {
+            // 处理可能存在的逗号，防止分列错误
+            const cleanRow = row.map(cell => `"${cell.replace(/"/g, '""')}"`);
+            csvContent += cleanRow.join(",") + "\n";
+        });
+
+        // 创建下载链接
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
         
-        // 导出文件
-        XLSX.
+        link.setAttribute("href", url);
+        link.setAttribute("download", `寻访数据_${new Date().getTime()}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
