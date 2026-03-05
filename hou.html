@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Flyun 猎头寻访匹配系统 - AI 分析版</title>
+    <style>
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f4f8; padding: 20px; }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #1890ff; text-align: center; margin-bottom: 20px; }
+        
+        /* 匹配分析区 */
+        .analysis-box { background: #e6f7ff; padding: 15px; border-radius: 8px; border: 1px solid #91d5ff; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+        .analysis-box input { flex: 1; padding: 10px; border: 1px solid #91d5ff; border-radius: 4px; }
+
+        /* 表单区域 */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 13px; color: #666; margin-bottom: 5px; font-weight: bold; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        /* 颜色与进度条 */
+        .status-fit { background-color: #e6ffed; color: #28a745; }
+        .status-unfit { background-color: #fff1f0; color: #f5222d; }
+        .status-contacting { background-color: #fffbe6; color: #faad14; }
+        .match-bar { width: 100%; background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px; }
+        .match-progress { height: 100%; background: #52c41a; transition: 0.3s; }
+
+        /* 按钮 */
+        .actions { display: flex; gap: 15px; justify-content: center; margin: 25px 0; }
+        .btn { padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-add { background: #1890ff; }
+        .btn-export { background: #52c41a; }
+        .btn-delete { background: #ff4d4f; padding: 4px 8px; font-size: 12px; }
+
+        /* 表格 */
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #e8e8e8; padding: 12px 10px; text-align: left; font-size: 13px; }
+        th { background: #fafafa; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Flyun 候选人匹配看板</h2>
+
+    <div class="analysis-box">
+        <strong>岗位核心词分析：</strong>
+        <input type="text" id="jobKeywords" placeholder="输入岗位JD关键词，用空格隔开，如：Java 架构 英语 出海" oninput="renderTable()">
+        <span style="font-size: 12px; color: #666;">* 输入后下方列表将自动计算匹配分值</span>
+    </div>
+    
+    <div class="form-grid">
+        <div class="form-group"><label>姓名</label><input type="text" id="name"></div>
+        <div class="form-group">
+            <label>状态</label>
+            <select id="status">
+                <option value="合适">合适</option>
+                <option value="不合适">不合适</option>
+                <option value="正在联系中">正在联系中</option>
+            </select>
+        </div>
+        <div class="form-group"><label>现职位/公司</label><input type="text" id="jobTitle"></div>
+        <div class="form-group"><label>备注/简历亮点</label><input type="text" id="note" placeholder="关键词匹配主要分析这里"></div>
+        <div class="form-group"><label>电话/微信</label><input type="text" id="contact"></div>
+        <div class="form-group"><label>学校</label><input type="text" id="school"></div>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-add" onclick="addRow()">录入候选人</button>
+        <button class="btn btn-export" onclick="exportCSV()">导出寻访报表</button>
+    </div>
+
+    <div class="table-container">
+        <table id="myTable">
+            <thead>
+                <tr>
+                    <th width="80">匹配度</th><th>姓名</th><th>状态</th><th>现职位/公司</th><th>备注/亮点</th><th>电话/微信</th><th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let dataList = [];
+
+    function addRow() {
+        const row = {
+            id: Date.now(),
+            name: document.getElementById('name').value,
+            status: document.getElementById('status').value,
+            jobTitle: document.getElementById('jobTitle').value,
+            note: document.getElementById('note').value,
+            contact: document.getElementById('contact').value,
+            school: document.getElementById('school').value
+        };
+        if(!row.name) return alert("请输入姓名");
+        dataList.push(row);
+        renderTable();
+        document.getElementById('name').value = '';
+    }
+
+    function deleteRow(id) {
+        dataList = dataList.filter(item => item.id !== id);
+        renderTable();
+    }
+
+    // 核心功能：关键词匹配算法
+    function calculateMatch(item, keywords) {
+        if (!keywords.trim()) return 0;
+        const kwArray = keywords.toLowerCase().split(/\s+/);
+        const sourceText = (item.jobTitle + " " + item.note + " " + item.school).toLowerCase();
+        
+        let matchCount = 0;
+        kwArray.forEach(kw => {
+            if (sourceText.includes(kw)) matchCount++;
+        });
+        
+        return Math.round((matchCount / kwArray.length) * 100);
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        const keywords = document.getElementById('jobKeywords').value;
+        tbody.innerHTML = "";
+
+        dataList.forEach(item => {
+            const score = calculateMatch(item, keywords);
+            const tr = document.createElement("tr");
+            
+            let statusClass = item.status === "合适" ? "status-fit" : (item.status === "不合适" ? "status-unfit" : "status-contacting");
+
+            tr.innerHTML = `
+                <td>
+                    <strong>${score}%</strong>
+                    <div class="match-bar"><div class="match-progress" style="width: ${score}%"></div></div>
+                </td>
+                <td>${item.name}</td>
+                <td class="${statusClass}">${item.status}</td>
+                <td>${item.jobTitle}</td>
+                <td>${item.note}</td>
+                <td>${item.contact}</td>
+                <td><button class="btn btn-delete" onclick="deleteRow(${item.id})">删除</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function exportCSV() {
+        if (dataList.length === 0) return;
+        let csvContent = "\ufeff姓名,状态,职位,备注,联系方式,学校\n";
+        dataList.forEach(item => {
+            csvContent += `"${item.name}","${item.status}","${item.jobTitle}","${item.note}","${item.contact}","${item.school}"\n`;
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `寻访匹配分析_${new Date().toLocaleDateString()}.csv`;
+        link.click();
+    }
+</script>
+
+</body>
+</html>
