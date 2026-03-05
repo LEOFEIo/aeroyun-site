@@ -2,42 +2,40 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Flyun 猎头寻访管理系统 - 专业版</title>
+    <title>Flyun 猎头寻访管理系统 - Excel导出增强版</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; padding: 20px; }
         .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { color: #333; text-align: center; margin-bottom: 25px; }
         
-        /* 登录遮罩层 */
+        /* 登录遮罩 */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
-            z-index: 1000;
+            background: rgba(44, 62, 80, 0.95); display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
         }
-        .login-box { background: white; padding: 40px; border-radius: 8px; text-align: center; width: 300px; }
-        .login-box input { width: 100%; padding: 10px; margin: 15px 0; box-sizing: border-box; }
+        .login-box { background: white; padding: 30px; border-radius: 10px; width: 300px; text-align: center; }
+        .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
 
-        /* 表单区域 */
+        /* 表单区域 - 严格对应 7 个功能框 */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 13px; color: #666; margin-bottom: 5px; font-weight: bold; }
         input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         
         /* 状态颜色 */
-        .status-fit { background-color: #e6ffed; color: #28a745; font-weight: bold; }
-        .status-unfit { background-color: #fff1f0; color: #f5222d; font-weight: bold; }
-        .status-contacting { background-color: #fffbe6; color: #faad14; font-weight: bold; }
+        .status-fit { background-color: #e6ffed !important; color: #28a745; font-weight: bold; }
+        .status-unfit { background-color: #fff1f0 !important; color: #f5222d; font-weight: bold; }
+        .status-contacting { background-color: #fffbe6 !important; color: #faad14; font-weight: bold; }
 
-        /* 按钮 */
         .actions { display: flex; gap: 15px; justify-content: center; margin: 25px 0; }
         .btn { padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 14px; transition: 0.2s; }
         .btn-add { background: #007bff; }
         .btn-export { background: #28a745; }
-        .btn-logout { background: #666; }
         .btn-delete { background: #ff4d4f; padding: 4px 8px; font-size: 12px; }
         .btn:hover { opacity: 0.8; transform: translateY(-1px); }
 
-        /* 表格 */
         .table-container { overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; background: white; min-width: 1000px; }
         th, td { border: 1px solid #e8e8e8; padding: 12px 10px; text-align: left; font-size: 13px; }
@@ -49,15 +47,14 @@
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h3>系统登录</h3>
-        <p style="font-size: 12px; color: #888;">请输入您的专属访问密码</p>
-        <input type="password" id="passInput" placeholder="请输入密码" onkeydown="if(event.keyCode==13) login()">
-        <button class="btn btn-add" style="width: 100%" onclick="login()">进入系统</button>
-        <p id="loginMsg" style="color: red; font-size: 12px; margin-top: 10px;"></p>
+        <h3 style="margin-top:0">Flyun 系统登录</h3>
+        <input type="password" id="sysPass" placeholder="请输入操作密码">
+        <button class="btn btn-add" style="width:100%" onclick="handleLogin()">进入系统</button>
+        <p id="errorTip" style="color:red; font-size:12px; display:none">密码错误！</p>
     </div>
 </div>
 
-<div class="container" id="mainContent" style="display: none;">
+<div class="container" id="appBody" style="display:none">
     <h2>Flyun 候选人寻访看板</h2>
     
     <div class="form-grid">
@@ -79,12 +76,12 @@
 
     <div class="actions">
         <button class="btn btn-add" onclick="addRow()">加入寻访名单</button>
-        <button class="btn btn-export" onclick="exportCSV()">导出 Excel 表格</button>
-        <button class="btn btn-logout" onclick="logout()">安全退出</button>
+        <button class="btn btn-export" onclick="exportToExcel()">导出真正的 Excel 文件</button>
+        <button class="btn" style="background:#888" onclick="location.reload()">安全退出</button>
     </div>
 
     <div class="table-container">
-        <table id="myTable">
+        <table id="mainTable">
             <thead>
                 <tr>
                     <th>姓名</th><th>状态</th><th>推荐公司</th><th>现公司</th><th>电话/微信</th><th>学校</th><th>备注</th><th>操作</th>
@@ -96,101 +93,63 @@
 </div>
 
 <script>
-    // --- 用户配置区 ---
-    // 您可以在这里设置不同的用户及其密码
-    const USERS = {
-        "admin": "123456",
-        "flyun01": "flyun888",
-        "guest": "666666"
+    const USER_CONFIG = {
+        "123456": "flyun_admin_data",
+        "flyun888": "flyun_staff_data"
     };
 
-    let currentUser = "";
+    let activeKey = "";
     let dataList = [];
 
-    // --- 登录逻辑 ---
-    function login() {
-        const pass = document.getElementById('passInput').value;
-        let foundUser = "";
-
-        for (let user in USERS) {
-            if (USERS[user] === pass) {
-                foundUser = user;
-                break;
-            }
-        }
-
-        if (foundUser) {
-            currentUser = foundUser;
+    // 1. 登录并加载本地数据
+    function handleLogin() {
+        const pass = document.getElementById('sysPass').value;
+        if (USER_CONFIG[pass]) {
+            activeKey = USER_CONFIG[pass];
             document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            loadData(); // 登录成功后加载该用户的数据
+            document.getElementById('appBody').style.display = 'block';
+            const localData = localStorage.getItem(activeKey);
+            if (localData) {
+                dataList = JSON.parse(localData);
+                renderTable();
+            }
         } else {
-            document.getElementById('loginMsg').innerText = "密码错误，请重试";
+            document.getElementById('errorTip').style.display = 'block';
         }
     }
 
-    function logout() {
-        location.reload(); // 简单处理，刷新即退出
-    }
-
-    // --- 数据持久化逻辑 ---
-    // 加载数据：根据当前用户名从 LocalStorage 获取
-    function loadData() {
-        const savedData = localStorage.getItem('flyun_data_' + currentUser);
-        if (savedData) {
-            dataList = JSON.parse(savedData);
-        } else {
-            dataList = [];
-        }
-        renderTable();
-    }
-
-    // 保存数据：每次增删操作后调用
-    function saveData() {
-        localStorage.setItem('flyun_data_' + currentUser, JSON.stringify(dataList));
-    }
-
-    // --- 表格操作逻辑 ---
+    // 2. 加入名单并保存
     function addRow() {
         const row = {
             id: Date.now(),
-            name: document.getElementById('name').value,
+            name: document.getElementById('name').value.trim(),
             status: document.getElementById('status').value,
-            recCompany: document.getElementById('recCompany').value,
-            currCompany: document.getElementById('currCompany').value,
-            contact: document.getElementById('contact').value,
-            school: document.getElementById('school').value,
-            note: document.getElementById('note').value
+            recCompany: document.getElementById('recCompany').value.trim(),
+            currCompany: document.getElementById('currCompany').value.trim(),
+            contact: document.getElementById('contact').value.trim(),
+            school: document.getElementById('school').value.trim(),
+            note: document.getElementById('note').value.trim()
         };
 
-        if(!row.name) { alert("姓名是必填项"); return; }
+        if (!row.name) { alert("姓名是必填项！"); return; }
 
         dataList.push(row);
-        saveData(); // 保存到本地
+        localStorage.setItem(activeKey, JSON.stringify(dataList));
         renderTable();
         
+        // 清空关键框
         document.getElementById('name').value = '';
         document.getElementById('contact').value = '';
     }
 
-    function deleteRow(id) {
-        if(confirm('确定要删除这条记录吗？')) {
-            dataList = dataList.filter(item => item.id !== id);
-            saveData(); // 保存修改
-            renderTable();
-        }
-    }
-
+    // 3. 渲染预览表
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
-
         dataList.forEach(item => {
             const tr = document.createElement("tr");
-            let statusClass = "";
-            if (item.status === "合适") statusClass = "status-fit";
-            else if (item.status === "不合适") statusClass = "status-unfit";
-            else if (item.status === "正在联系中") statusClass = "status-contacting";
+            let statusClass = item.status === "合适" ? "status-fit" : 
+                              (item.status === "不合适" ? "status-unfit" : "status-contacting");
 
             tr.innerHTML = `
                 <td>${item.name}</td>
@@ -206,23 +165,41 @@
         });
     }
 
-    function exportCSV() {
-        if (dataList.length === 0) { alert("暂无数据可导出"); return; }
-        let csvContent = "\ufeff"; 
-        const headers = ["姓名", "状态", "推荐公司", "现公司", "电话/微信", "学校", "备注"];
-        csvContent += headers.join(",") + "\n";
-        
+    function deleteRow(id) {
+        if (confirm('确认删除？')) {
+            dataList = dataList.filter(i => i.id !== id);
+            localStorage.setItem(activeKey, JSON.stringify(dataList));
+            renderTable();
+        }
+    }
+
+    // 4. 核心功能：导出为标准的 .xlsx 表格
+    function exportToExcel() {
+        if (dataList.length === 0) { alert("没有数据可供导出"); return; }
+
+        // 准备 Excel 数据头
+        const worksheetData = [
+            ["姓名", "状态", "推荐公司", "现公司", "电话/微信", "学校", "备注"]
+        ];
+
+        // 填充内容
         dataList.forEach(item => {
-            const row = [item.name, item.status, item.recCompany, item.currCompany, item.contact, item.school, item.note]
-                        .map(v => `"${(v||"").replace(/"/g, '""')}"`);
-            csvContent += row.join(",") + "\n";
+            worksheetData.push([
+                item.name, item.status, item.recCompany, 
+                item.currCompany, item.contact, item.school, item.note
+            ]);
         });
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `寻访报告_${currentUser}_${new Date().toLocaleDateString()}.csv`;
-        link.click();
+        // 创建工作簿
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+        // 将工作表放入工作簿
+        XLSX.utils.book_append_sheet(wb, ws, "寻访名单");
+
+        // 生成并下载文件
+        const fileName = `Flyun寻访报告_${new Date().toLocaleDateString()}.xlsx`;
+        XLSX.writeFile(wb, fileName);
     }
 </script>
 
